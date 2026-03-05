@@ -19,33 +19,33 @@
     }
     #overlay {
       position: absolute;
-      bottom: 40px; right: 40px;
+      bottom: 80px; right: 80px;
       opacity: 0;
     }
     #overlay.playing {
       animation: badgeAnim var(--dur) ease forwards;
     }
     #card {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 20px;
+      display: flex; align-items: center; gap: 24px;
+      padding: 28px 40px;
       background: rgba(15,10,40,0.9);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 14px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 28px;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.6);
     }
     #logo-box {
-      width: 44px; height: 44px; border-radius: 10px;
+      width: 88px; height: 88px; border-radius: 20px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px; font-weight: 700; color: white;
+      font-size: 44px; font-weight: 700; color: white;
       font-family: Arial, sans-serif; flex-shrink: 0;
       overflow: hidden;
     }
     #logo-box img { width: 100%; height: 100%; object-fit: contain; }
-    .text-wrap { display: flex; flex-direction: column; gap: 2px; }
-    .sponsor { font-family: Arial, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
-    .brand { font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; color: #fff; line-height: 1; }
-    .tagline { font-family: Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.55); }
-    #promo { font-family: Arial, sans-serif; font-size: 10px; font-weight: 700; color: white; margin-top: 3px; padding: 2px 8px; border-radius: 999px; display: inline-block; }
+    .text-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .sponsor { font-family: Arial, sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .brand { font-family: Arial, sans-serif; font-size: 32px; font-weight: 700; color: #fff; line-height: 1; }
+    .tagline { font-family: Arial, sans-serif; font-size: 22px; color: rgba(255,255,255,0.55); }
+    #promo { font-family: Arial, sans-serif; font-size: 20px; font-weight: 700; color: white; margin-top: 6px; padding: 4px 16px; border-radius: 999px; display: inline-block; }
   </style>
 </head>
 <body>
@@ -68,7 +68,7 @@
     const duration  = parseInt(params.get('duration') || '8000');
     const promoCode = params.get('promo')      || null;
     const loopMins  = parseFloat(params.get('loop') || '0');
-    const logoUrl   = params.get('logo_url') || params.get('logo')   || null;
+    const logoUrl   = params.get('logo_url') || params.get('logo') || null;
 
     document.documentElement.style.setProperty('--dur', (duration/1000) + 's');
     document.getElementById('brand-name').textContent = brandName;

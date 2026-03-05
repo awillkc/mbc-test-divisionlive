@@ -12,10 +12,10 @@
       background-color: transparent !important;
     }
     @keyframes takeoverAnim {
-      0%   { opacity: 0; transform: translateY(20px); }
+      0%   { opacity: 0; transform: translateY(40px); }
       10%  { opacity: 1; transform: translateY(0px); }
       80%  { opacity: 1; transform: translateY(0px); }
-      100% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 0; transform: translateY(20px); }
     }
     #overlay {
       position: absolute;
@@ -26,25 +26,25 @@
       animation: takeoverAnim var(--dur) ease forwards;
     }
     #bar {
-      width: 100%; padding: 28px 80px;
+      width: 100%; padding: 40px 160px;
       display: flex; align-items: center; justify-content: space-between;
       background: linear-gradient(90deg, rgba(15,10,40,0.97) 0%, rgba(30,20,80,0.95) 100%);
-      border-top: 2px solid rgba(255,255,255,0.1);
+      border-top: 3px solid rgba(255,255,255,0.1);
     }
-    .left { display: flex; align-items: center; gap: 24px; }
+    .left { display: flex; align-items: center; gap: 48px; }
     #logo-box {
-      width: 72px; height: 72px; border-radius: 14px;
+      width: 144px; height: 144px; border-radius: 28px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 32px; font-weight: 700; color: white;
+      font-size: 64px; font-weight: 700; color: white;
       font-family: Arial, sans-serif; flex-shrink: 0;
       overflow: hidden;
     }
     #logo-box img { width: 100%; height: 100%; object-fit: contain; }
-    .text-wrap { display: flex; flex-direction: column; gap: 4px; }
-    .sponsor { font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
-    .brand { font-family: Arial, sans-serif; font-size: 32px; font-weight: 700; color: #fff; line-height: 1; }
-    .tagline { font-family: Arial, sans-serif; font-size: 16px; color: rgba(255,255,255,0.6); }
-    #promo { padding: 12px 32px; border-radius: 999px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; color: white; }
+    .text-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .sponsor { font-family: Arial, sans-serif; font-size: 22px; font-weight: 600; letter-spacing: 5px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .brand { font-family: Arial, sans-serif; font-size: 64px; font-weight: 700; color: #fff; line-height: 1; }
+    .tagline { font-family: Arial, sans-serif; font-size: 32px; color: rgba(255,255,255,0.6); }
+    #promo { padding: 24px 64px; border-radius: 999px; font-family: Arial, sans-serif; font-size: 32px; font-weight: 700; color: white; }
   </style>
 </head>
 <body>
@@ -69,7 +69,7 @@
     const duration  = parseInt(params.get('duration') || '8000');
     const promoCode = params.get('promo')      || null;
     const loopMins  = parseFloat(params.get('loop') || '0');
-    const logoUrl   = params.get('logo_url') || params.get('logo')   || null;
+    const logoUrl   = params.get('logo_url') || params.get('logo') || null;
 
     document.documentElement.style.setProperty('--dur', (duration/1000) + 's');
     document.getElementById('brand-name').textContent = brandName;
