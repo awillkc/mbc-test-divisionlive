@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>GIF Overlay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1920px; height: 1080px;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+    @keyframes fadeIn {
+      0%   { opacity: 0; transform: translateY(40px); }
+      15%  { opacity: 1; transform: translateY(0); }
+      80%  { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(20px); }
+    }
+    #overlay {
+      position: absolute;
+      bottom: 40px; right: 40px;
+      opacity: 0;
+    }
+    #overlay.playing {
+      animation: fadeIn var(--dur) ease forwards;
+    }
+    #overlay.hidden { display: none; }
+    img { max-width: 500px; max-height: 500px; display: block; }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <img id="gif" src="" alt=""/>
+  </div>
+  <script>
+    const params   = new URLSearchParams(window.location.search);
+    const url      = params.get('url') || null;
+    const duration = parseInt(params.get('duration') || '8000');
+    const loopMins = parseFloat(params.get('loop') || '0');
+
+    document.documentElement.style.setProperty('--dur', (duration/1000) + 's');
+
+    if (url) document.getElementById('gif').src = decodeURIComponent(url);
+
+    function play() {
+      const el = document.getElementById('overlay');
+      el.classList.remove('hidden', 'playing');
+      void el.offsetWidth;
+      el.classList.add('playing');
+      setTimeout(() => el.classList.add('hidden'), duration);
+    }
+
+    play();
+    if (loopMins > 0) setInterval(play, loopMins * 60 * 1000);
+  </script>
+</body>
+</html>
