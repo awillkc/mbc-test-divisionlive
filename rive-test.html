@@ -5,23 +5,25 @@
   <title>Rive Test</title>
   <script src="https://cdn.jsdelivr.net/npm/@rive-app/canvas@latest/rive.js"></script>
   <style>
-    body { background: #000; margin: 0; }
-    canvas { display: block; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1920px; height: 1080px;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+    canvas {
+      position: absolute;
+      bottom: 40px; right: 40px;
+      width: 400px; height: 400px;
+    }
   </style>
 </head>
 <body>
-  <canvas id="rive-canvas" width="500" height="500"></canvas>
+  <canvas id="rive-canvas" width="400" height="400"></canvas>
   <script>
     const r = new rive.Rive({
       src: 'https://mbc-test-divisionlive.netlify.app/box-cat.riv',
       canvas: document.getElementById('rive-canvas'),
       artboard: 'Artboard',
       stateMachines: 'State Machine 1',
-      autoplay: true,
-      onLoad: () => {
-        r.resizeDrawingSurfaceToCanvas();
-      }
-    });
-  </script>
-</body>
-</html>
