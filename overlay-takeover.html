@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Stream Overlay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
+    /* ─── SLIDE IN BOTTOM ─── */
+    @keyframes slideUpAnim {
+      0%   { opacity: 0; transform: translateY(80px); }
+      12%  { opacity: 1; transform: translateY(0px); }
+      80%  { opacity: 1; transform: translateY(0px); }
+      100% { opacity: 0; transform: translateY(40px); }
+    }
+
+    /* ─── CORNER BADGE ─── */
+    @keyframes badgeAnim {
+      0%   { opacity: 0; transform: scale(0.6); }
+      15%  { opacity: 1; transform: scale(1); }
+      80%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.8); }
+    }
+
+    /* ─── TAKEOVER ─── */
+    @keyframes takeoverAnim {
+      0%   { opacity: 0; transform: translateY(20px); }
+      10%  { opacity: 1; transform: translateY(0px); }
+      80%  { opacity: 1; transform: translateY(0px); }
+      100% { opacity: 0; transform: translateY(10px); }
+    }
+
+    /* ── SLIDE IN BOTTOM layout ── */
+    #slide-wrap {
+      display: none;
+      position: absolute;
+      bottom: 60px;
+      left: 0; right: 0;
+      justify-content: center;
+      opacity: 0;
+    }
+    #slide-wrap.active {
+      display: flex;
+      animation: slideUpAnim var(--dur) ease forwards;
+    }
+    #slide-card {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 20px 40px;
+      background: rgba(15, 10, 40, 0.85);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    .logo-box {
+      width: 64px; height: 64px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .divider {
+      width: 1px; height: 48px;
+      background: rgba(255,255,255,0.2);
+      flex-shrink: 0;
+    }
+    .text-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .sponsor-label {
+      font-family: Arial, sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+    .brand-name {
+      font-family: Arial, sans-serif;
+      font-size: 26px; font-weight: 700;
+      color: #fff; line-height: 1;
+    }
+    .tagline-text {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 2px;
+    }
+    .pill {
+      margin-left: 8px; padding: 6px 16px;
+      border-radius: 999px;
+      font-family: Arial, sans-serif;
+      font-size: 13px; font-weight: 700;
+      color: white; flex-shrink: 0;
+    }
+
+    /* ── CORNER BADGE layout ── */
+    #badge-wrap {
+      display: none;
+      position: absolute;
+      bottom: 40px; right: 40px;
+      opacity: 0;
+    }
+    #badge-wrap.active {
+      display: flex;
+      animation: badgeAnim var(--dur) ease forwards;
+    }
+    #badge-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: rgba(15, 10, 40, 0.9);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    }
+    .badge-logo {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .badge-text { display: flex; flex-direction: column; gap: 2px; }
+    .badge-sponsor {
+      font-family: Arial, sans-serif;
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+    .badge-name {
+      font-family: Arial, sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: #fff; line-height: 1;
+    }
+    .badge-tagline {
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* ── TAKEOVER layout ── */
+    #takeover-wrap {
+      display: none;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      opacity: 0;
+    }
+    #takeover-wrap.active {
+      display: flex;
+      animation: takeoverAnim var(--dur) ease forwards;
+    }
+    #takeover-bar {
+      width: 100%;
+      padding: 28px 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, rgba(15,10,40,0.97) 0%, rgba(30,20,80,0.95) 100%);
+      border-top: 2px solid rgba(255,255,255,0.1);
+    }
+    .takeover-left {
+      display: flex; align-items: center; gap: 24px;
+    }
+    .takeover-logo {
+      width: 72px; height: 72px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; flex-shrink: 0;
+    }
+    .takeover-text { display: flex; flex-direction: column; gap: 4px; }
+    .takeover-sponsor {
+      font-family: Arial, sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+    .takeover-name {
+      font-family: Arial, sans-serif;
+      font-size: 32px; font-weight: 700;
+      color: #fff; line-height: 1;
+    }
+    .takeover-tagline {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      color: rgba(255,255,255,0.6);
+    }
+    .takeover-pill {
+      padding: 12px 32px;
+      border-radius: 999px;
+      font-family: Arial, sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- STYLE 1: Slide in Bottom -->
+  <div id="slide-wrap">
+    <div id="slide-card">
+      <div class="logo-box" id="slide-logo"></div>
+      <div class="divider"></div>
+      <div class="text-wrap">
+        <span class="sponsor-label">Sponsored by</span>
+        <span class="brand-name" id="slide-name"></span>
+        <span class="tagline-text" id="slide-tagline"></span>
+      </div>
+      <div class="pill" id="slide-pill">Visit Now</div>
+    </div>
+  </div>
+
+  <!-- STYLE 2: Corner Badge -->
+  <div id="badge-wrap">
+    <div id="badge-card">
+      <div class="badge-logo" id="badge-logo"></div>
+      <div class="badge-text">
+        <span class="badge-sponsor">Sponsored by</span>
+        <span class="badge-name" id="badge-name"></span>
+        <span class="badge-tagline" id="badge-tagline"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STYLE 3: Takeover -->
+  <div id="takeover-wrap">
+    <div id="takeover-bar">
+      <div class="takeover-left">
+        <div class="takeover-logo" id="takeover-logo"></div>
+        <div class="takeover-text">
+          <span class="takeover-sponsor">Sponsored by</span>
+          <span class="takeover-name" id="takeover-name"></span>
+          <span class="takeover-tagline" id="takeover-tagline"></span>
+        </div>
+      </div>
+      <div class="takeover-pill" id="takeover-pill">Visit Now</div>
+    </div>
+  </div>
+
+  <script>
+    // Read URL params
+    // params removed
+    const brandName = params.get('brand_name') || 'Your Brand';
+    const tagline   = params.get('tagline')    || 'Your tagline here';
+    const color     = '#' + (params.get('color') || '4F46E5').replace('#','');
+    const duration  = parseInt(params.get('duration') || '8000');
+    const style = "takeover";
+
+    // First letter as logo placeholder
+    const initial = brandName.charAt(0).toUpperCase();
+
+    // Set CSS duration variable
+    const durSec = (duration / 1000) + 's';
+    document.documentElement.style.setProperty('--dur', durSec);
+
+    // Helper: populate and activate a style
+    function activate(wrapId, nameId, taglineId, logoId, pillId) {
+      document.getElementById(nameId).textContent    = brandName;
+      document.getElementById(taglineId).textContent = tagline;
+
+      const logo = document.getElementById(logoId);
+      logo.textContent = initial;
+      logo.style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
+
+      if (pillId) {
+        const pill = document.getElementById(pillId);
+        pill.style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
+      }
+
+      document.getElementById(wrapId).classList.add('active');
+    }
+
+    // Activate the right style
+    if (style === 'corner-badge') {
+      activate('badge-wrap', 'badge-name', 'badge-tagline', 'badge-logo', null);
+    } else if (style === 'takeover') {
+      const pill = document.getElementById('takeover-pill');
+      pill.style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
+      activate('takeover-wrap', 'takeover-name', 'takeover-tagline', 'takeover-logo', 'takeover-pill');
+    } else {
+      // default: slide-in-bottom
+      activate('slide-wrap', 'slide-name', 'slide-tagline', 'slide-logo', 'slide-pill');
+    }
+  </script>
+
+</body>
+</html>
