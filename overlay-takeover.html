@@ -20,8 +20,10 @@
     #overlay {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      animation: takeoverAnim var(--dur) ease forwards;
       opacity: 0;
+    }
+    #overlay.playing {
+      animation: takeoverAnim var(--dur) ease forwards;
     }
     #bar {
       width: 100%; padding: 28px 80px;
@@ -40,7 +42,7 @@
     .sponsor { font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
     .brand { font-family: Arial, sans-serif; font-size: 32px; font-weight: 700; color: #fff; line-height: 1; }
     .tagline { font-family: Arial, sans-serif; font-size: 16px; color: rgba(255,255,255,0.6); }
-    #pill { padding: 12px 32px; border-radius: 999px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; color: white; }
+    #promo { padding: 12px 32px; border-radius: 999px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; color: white; }
   </style>
 </head>
 <body>
@@ -54,21 +56,44 @@
           <span class="tagline" id="tagline"></span>
         </div>
       </div>
-      <div id="pill">Visit Now</div>
+      <div id="promo"></div>
     </div>
   </div>
   <script>
-    const params = new URLSearchParams(window.location.search);
+    const params    = new URLSearchParams(window.location.search);
     const brandName = params.get('brand_name') || 'Your Brand';
     const tagline   = params.get('tagline')    || 'Your tagline here';
     const color     = '#' + (params.get('color') || '4F46E5').replace('#','');
     const duration  = parseInt(params.get('duration') || '8000');
+    const promoCode = params.get('promo')      || null;
+    const loopMins  = parseFloat(params.get('loop') || '0');
+
     document.documentElement.style.setProperty('--dur', (duration/1000) + 's');
     document.getElementById('brand-name').textContent = brandName;
-    document.getElementById('tagline').textContent = tagline;
-    document.getElementById('logo-box').textContent = brandName.charAt(0).toUpperCase();
+    document.getElementById('tagline').textContent    = tagline;
+    document.getElementById('logo-box').textContent   = brandName.charAt(0).toUpperCase();
     document.getElementById('logo-box').style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
-    document.getElementById('pill').style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
+
+    const promoEl = document.getElementById('promo');
+    if (promoCode) {
+      promoEl.textContent = promoCode;
+      promoEl.style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
+    } else {
+      promoEl.style.display = 'none';
+    }
+
+    function play() {
+      const el = document.getElementById('overlay');
+      el.classList.remove('playing');
+      void el.offsetWidth;
+      el.classList.add('playing');
+    }
+
+    play();
+
+    if (loopMins > 0) {
+      setInterval(play, loopMins * 60 * 1000);
+    }
   </script>
 </body>
 </html>
