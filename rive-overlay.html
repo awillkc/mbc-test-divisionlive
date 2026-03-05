@@ -26,10 +26,12 @@
 <body>
   <canvas id="rive-canvas" width="500" height="500"></canvas>
   <script>
-    const params   = new URLSearchParams(window.location.search);
-    const riveUrl  = params.get('rive_url')  || null;
-    const duration = parseInt(params.get('duration') || '0');
-    const loopMins = parseFloat(params.get('loop')   || '0');
+    const params      = new URLSearchParams(window.location.search);
+    const riveUrl     = params.get('rive_url')      || null;
+    const duration    = parseInt(params.get('duration') || '0');
+    const loopMins    = parseFloat(params.get('loop')   || '0');
+    const artboard    = params.get('artboard')      || 'Artboard';
+    const stateMachine = params.get('state_machine') || 'State Machine 1';
 
     if (!riveUrl) {
       console.error('No rive_url parameter provided');
@@ -42,6 +44,8 @@
         const r = new rive.Rive({
           src: decodeURIComponent(riveUrl),
           canvas: canvas,
+          artboard: artboard,
+          stateMachines: stateMachine,
           autoplay: true,
           onLoad: () => {
             r.resizeDrawingSurfaceToCanvas();
@@ -64,11 +68,4 @@
       if (loopMins > 0) {
         setInterval(() => {
           canvas.style.display = 'block';
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          startRive();
-        }, loopMins * 60 * 1000);
-      }
-    }
-  </script>
-</body>
-</html>
+          ctx.clear
