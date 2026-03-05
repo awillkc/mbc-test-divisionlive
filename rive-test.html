@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Rive Test Overlay</title>
+  <script src="https://unpkg.com/@rive-app/canvas@2.10.0/rive.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+    canvas {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      width: 400px;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="rive-canvas"></canvas>
+  <script>
+    const r = new rive.Rive({
+      src: 'box-cat.riv',
+      canvas: document.getElementById('rive-canvas'),
+      autoplay: true,
+      onLoad: () => {
+        r.resizeDrawingSurfaceToCanvas();
+      }
+    });
+  </script>
+</body>
+</html>
