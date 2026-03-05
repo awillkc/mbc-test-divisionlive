@@ -38,7 +38,9 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 22px; font-weight: 700; color: white;
       font-family: Arial, sans-serif; flex-shrink: 0;
+      overflow: hidden;
     }
+    #logo-box img { width: 100%; height: 100%; object-fit: contain; }
     .text-wrap { display: flex; flex-direction: column; gap: 2px; }
     .sponsor { font-family: Arial, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
     .brand { font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; color: #fff; line-height: 1; }
@@ -66,12 +68,21 @@
     const duration  = parseInt(params.get('duration') || '8000');
     const promoCode = params.get('promo')      || null;
     const loopMins  = parseFloat(params.get('loop') || '0');
+    const logoUrl   = params.get('logo_url')   || null;
 
     document.documentElement.style.setProperty('--dur', (duration/1000) + 's');
     document.getElementById('brand-name').textContent = brandName;
     document.getElementById('tagline').textContent    = tagline;
-    document.getElementById('logo-box').textContent   = brandName.charAt(0).toUpperCase();
-    document.getElementById('logo-box').style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
+
+    const logoBox = document.getElementById('logo-box');
+    if (logoUrl) {
+      const img = document.createElement('img');
+      img.src = decodeURIComponent(logoUrl);
+      logoBox.appendChild(img);
+    } else {
+      logoBox.textContent = brandName.charAt(0).toUpperCase();
+      logoBox.style.background = `linear-gradient(135deg, ${color}, ${color}99)`;
+    }
 
     const promoEl = document.getElementById('promo');
     if (promoCode) {
@@ -89,10 +100,7 @@
     }
 
     play();
-
-    if (loopMins > 0) {
-      setInterval(play, loopMins * 60 * 1000);
-    }
+    if (loopMins > 0) setInterval(play, loopMins * 60 * 1000);
   </script>
 </body>
 </html>
