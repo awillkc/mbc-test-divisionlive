@@ -16,6 +16,7 @@
       position: absolute;
       bottom: 40px; right: 40px;
       width: 400px; height: 400px;
+      background: transparent;
     }
   </style>
 </head>
@@ -27,3 +28,12 @@
       canvas: document.getElementById('rive-canvas'),
       artboard: 'Artboard',
       stateMachines: 'State Machine 1',
+      autoplay: true,
+      useOffscreenRenderer: true,
+      onLoad: () => {
+        r.resizeDrawingSurfaceToCanvas();
+      }
+    });
+  </script>
+</body>
+</html>
