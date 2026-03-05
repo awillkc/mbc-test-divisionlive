@@ -7,18 +7,15 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 1920px;
-      height: 1080px;
+      width: 1920px; height: 1080px;
       overflow: hidden;
       background: transparent !important;
       background-color: transparent !important;
     }
     canvas {
       position: absolute;
-      bottom: 40px;
-      right: 40px;
-      width: 400px;
-      height: 400px;
+      bottom: 40px; right: 40px;
+      width: 400px; height: 400px;
     }
   </style>
 </head>
@@ -26,7 +23,7 @@
   <canvas id="rive-canvas"></canvas>
   <script>
     const r = new rive.Rive({
-      src: 'box-cat.riv',
+      src: 'https://mbc-test-divisionlive.netlify.app/box-cat.riv',
       canvas: document.getElementById('rive-canvas'),
       autoplay: true,
       onLoad: () => {
