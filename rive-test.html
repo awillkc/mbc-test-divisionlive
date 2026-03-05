@@ -1,16 +1,30 @@
-<canvas id="rive-canvas" width="400" height="400"></canvas>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Rive Debug</title>
+  <script src="https://unpkg.com/@rive-app/canvas@2.21.6/rive.js"></script>
+  <style>
+    body { background: #000; color: white; font-family: Arial; font-size: 20px; padding: 40px; }
+  </style>
+</head>
+<body>
+  <div id="info">Loading...</div>
+  <canvas id="rive-canvas" width="400" height="400"></canvas>
   <script>
-    try {
-      const r = new rive.Rive({
-        src: 'https://mbc-test-divisionlive.netlify.app/box-cat.riv',
-        canvas: document.getElementById('rive-canvas'),
-        autoplay: true,
-        animations: 'idle,
-        onLoad: () => {
-          r.resizeDrawingSurfaceToCanvas();
-        }
-      });
-    } catch(e) {
-      document.getElementById('status').textContent = 'Error: ' + e.message;
-    }
+    const r = new rive.Rive({
+      src: 'https://mbc-test-divisionlive.netlify.app/box-cat.riv',
+      canvas: document.getElementById('rive-canvas'),
+      autoplay: false,
+      onLoad: () => {
+        const info = document.getElementById('info');
+        info.innerHTML = `
+          <p><b>Artboards:</b> ${r.artboardNames.join(', ')}</p>
+          <p><b>Animations:</b> ${r.animationNames.join(', ')}</p>
+          <p><b>State Machines:</b> ${r.stateMachineNames.join(', ')}</p>
+        `;
+      }
+    });
   </script>
+</body>
+</html>
