@@ -2,34 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Rive Test Overlay</title>
-  <script src="https://unpkg.com/@rive-app/canvas@2.10.0/rive.js"></script>
+  <title>Rive Test</title>
+  <script src="https://unpkg.com/@rive-app/canvas@2.21.6/rive.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 1920px; height: 1080px;
       overflow: hidden;
-      background: transparent !important;
-      background-color: transparent !important;
+      background: #000000;
     }
     canvas {
       position: absolute;
       bottom: 40px; right: 40px;
       width: 400px; height: 400px;
     }
+    #status {
+      position: absolute;
+      top: 20px; left: 20px;
+      color: white; font-size: 24px;
+      font-family: Arial, sans-serif;
+    }
   </style>
 </head>
 <body>
-  <canvas id="rive-canvas"></canvas>
+  <div id="status">Loading...</div>
+  <canvas id="rive-canvas" width="400" height="400"></canvas>
   <script>
-    const r = new rive.Rive({
-      src: 'https://mbc-test-divisionlive.netlify.app/box-cat.riv',
-      canvas: document.getElementById('rive-canvas'),
-      autoplay: true,
-      onLoad: () => {
-        r.resizeDrawingSurfaceToCanvas();
-      }
-    });
+    document.getElementById('status').textContent = 'Rive loaded, starting...';
+    try {
+      const r = new rive.Rive({
+        src: 'https://mbc-test-divisionlive.netlify.app/box-cat.riv',
+        canvas: document.getElementById('rive-canvas'),
+        autoplay: true,
+        onLoad: () => {
+          document.getElementById('status').textContent = 'Playing!';
+          r.resizeDrawingSurfaceToCanvas();
+        },
+        onLoadError: (e) => {
+          document.getElementById('status').textContent = 'Load error: ' + e;
+        }
+      });
+    } catch(e) {
+      document.getElementById('status').textContent = 'Error: ' + e.message;
+    }
   </script>
 </body>
 </html>
