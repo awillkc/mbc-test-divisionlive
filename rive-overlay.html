@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Rive Overlay</title>
+  <script src="https://unpkg.com/@rive-app/canvas@2.21.6/rive.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+    canvas {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      width: 500px;
+      height: 500px;
+      background: transparent !important;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="rive-canvas" width="500" height="500"></canvas>
+  <script>
+    const params   = new URLSearchParams(window.location.search);
+    const riveUrl  = params.get('rive_url')  || null;
+    const duration = parseInt(params.get('duration') || '0');
+    const loopMins = parseFloat(params.get('loop')   || '0');
+
+    if (!riveUrl) {
+      console.error('No rive_url parameter provided');
+    } else {
+      const canvas = document.getElementById('rive-canvas');
+      const ctx    = canvas.getContext('2d', { alpha: true });
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      function startRive() {
+        const r = new rive.Rive({
+          src: decodeURIComponent(riveUrl),
+          canvas: canvas,
+          autoplay: true,
+          onLoad: () => {
+            r.resizeDrawingSurfaceToCanvas();
+            if (duration > 0) {
+              setTimeout(() => {
+                r.stop();
+                canvas.style.display = 'none';
+              }, duration);
+            }
+          },
+          onLoadError: (e) => {
+            console.error('Rive load error:', e);
+          }
+        });
+        return r;
+      }
+
+      startRive();
+
+      if (loopMins > 0) {
+        setInterval(() => {
+          canvas.style.display = 'block';
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          startRive();
+        }, loopMins * 60 * 1000);
+      }
+    }
+  </script>
+</body>
+</html>
