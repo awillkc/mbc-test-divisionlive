@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Video Takeover</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1920px; height: 1080px;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+    @keyframes fadeIn {
+      0%   { opacity: 0; }
+      10%  { opacity: 1; }
+      85%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 1920px; height: 1080px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+    }
+    #overlay.playing {
+      animation: fadeIn var(--dur) ease forwards;
+    }
+    #overlay.hidden { display: none; }
+    #backdrop {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+    }
+    #video-wrap {
+      position: relative;
+      width: 70%;
+      height: 70%;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+    }
+    video, img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <div id="backdrop"></div>
+    <div id="video-wrap"></div>
+  </div>
+  <script>
+    const params   = new URLSearchParams(window.location.search);
+    const url      = params.get('url')      || null;
+    const duration = parseInt(params.get('duration') || '8000');
+    const loopMins = parseFloat(params.get('loop')   || '0');
+
+    document.documentElement.style.setProperty('--dur', (duration/1000) + 's');
+
+    const wrap = document.getElementById('video-wrap');
+
+    if (url) {
+      const decoded = decodeURIComponent(url);
+      const isGif   = decoded.toLowerCase().includes('.gif');
+      if (isGif) {
+        const img = document.createElement('img');
+        img.src = decoded;
+        wrap.appendChild(img);
+      } else {
+        const vid = document.createElement('video');
+        vid.autoplay = true;
+        vid.loop = true;
+        vid.muted = true;
+        vid.playsInline = true;
+        const src = document.createElement('source');
+        src.src  = decoded;
+        src.type = decoded.includes('.mp4') ? 'video/mp4' : 'video/webm';
+        vid.appendChild(src);
+        wrap.appendChild(vid);
+        vid.load();
+        vid.play();
+      }
+    }
+
+    function play() {
+      const el = document.getElementById('overlay');
+      el.classList.remove('hidden', 'playing');
+      void el.offsetWidth;
+      el.classList.add('playing');
+      const vid = wrap.querySelector('video');
+      if (vid) { vid.currentTime = 0; vid.play(); }
+      setTimeout(() => el.classList.add('hidden'), duration);
+    }
+
+    play();
+    if (loopMins > 0) setInterval(play, loopMins * 60 * 1000);
+  </script>
+</body>
+</html>
