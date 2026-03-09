@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>BetaStream Overlay</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: transparent !important; width: 1920px; height: 1080px; overflow: hidden; }
+#overlay-frame { position: fixed; inset: 0; width: 1920px; height: 1080px; border: 0; background: transparent; }
+</style>
+</head>
+<body>
+<iframe id="overlay-frame" style="display:none"></iframe>
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var streamerId = params.get('sid');
+  if (!streamerId) return;
+  var SUPABASE_URL = 'https://qwasgcysgppajmdknlor.supabase.co';
+  var OVERLAY_BASE = 'https://divisionstream.live';
+  var frame = document.getElementById('overlay-frame');
+  var activeCampaigns = [];
+  var currentIndex = 0;
+  var showTimer = null;
+  function enc(v) { return encodeURIComponent(v || ''); }
+  function layerParams(b) { return 'layer-name=BetaStream+-+' + enc(b) + '&layer-width=1920&layer-height=1080'; }
+  function buildUrl(c) {
+    var layer = layerParams(c.brand_name);
+    var type = (c.overlay_type || '').toLowerCase();
+    if (type === 'rive' && c.rive_url) return OVERLAY_BASE + '/rive-overlay.html?rive_url=' + enc(c.rive_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    if (type === 'gif' && c.animation_url) return OVERLAY_BASE + '/gif-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    if (type === 'video-takeover' && c.animation_url) return OVERLAY_BASE + '/video-takeover.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    if (type === 'video' && c.animation_url) return OVERLAY_BASE + '/video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    var color = (c.primary_color || '').replace(/^#/, '');
+    return OVERLAY_BASE + '/overlay-slide.html?brand_name=' + enc(c.brand_name) + '&tagline=' + enc(c.tagline) + '&color=' + enc(color) + '&duration=' + c.duration_ms + '&loop=0&promo=' + enc(c.promo_code) + '&logo=' + enc(c.logo_url) + '&' + layer;
+  }
+  function showNext() {
+    if (activeCampaigns.length === 0) { frame.style.display = 'none'; return; }
+    var c = activeCampaigns[currentIndex % activeCampaigns.length];
+    frame.src = buildUrl(c); frame.style.display = 'block';
+    var dur = (c.duration_ms || 10000) + 2000;
+    if (showTimer) clearTimeout(showTimer);
+    showTimer = setTimeout(function() { frame.style.display = 'none'; frame.src = 'about:blank'; }, dur);
+    currentIndex++;
+  }
+  function poll() {
+    fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId))
+      .then(function(r) { return r.json(); })
+      .then(function(campaigns) { if (Array.isArray(campaigns)) activeCampaigns = campaigns; })
+      .catch(function() {});
+  }
+  function startLoop() {
+    poll(); setInterval(poll, 30000);
+    setTimeout(function() {
+      if (activeCampaigns.length > 0) {
+        showNext();
+        var loopMs = activeCampaigns.reduce(function(min, c) { var m = c.loop_mins || 5; if (m < 1) m = 5; return Math.min(min, m * 60000); }, 300000);
+        setInterval(showNext, loopMs);
+      }
+    }, 2000);
+  }
+  startLoop();
+})();
+</script>
+</body>
+</html>
