@@ -243,6 +243,10 @@
   </div>
 
   <script>
+    // Redirect non-OBS visitors to the main site
+if (!window.location.search) {
+  window.location.replace('https://www.divisionstream.live');
+}
     // Read URL params
     const params = new URLSearchParams(window.location.search);
     const brandName = params.get('brand_name') || 'Your Brand';
