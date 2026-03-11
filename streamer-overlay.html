@@ -1,24 +1,53 @@
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>BetaStream Overlay</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: transparent !important;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+  }
+  #overlay-frame {
+    position: fixed;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    border: 0;
+    background: transparent;
+  }
+</style>
+</head>
+<body>
+<iframe id="overlay-frame" style="display:none"></iframe>
 
-async function runCycle() {
-    console.log('[overlay] runCycle started');
-while (true) {
-var campaigns = activeCampaigns.slice();
-if (campaigns.length === 0) {
-        console.log('[overlay] no campaigns, waiting 5s...');
-await wait(5000);
-continue;
-}
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var streamerId = params.get('sid');
+  if (!streamerId) return;
 
-      console.log('[overlay] cycle start, ' + campaigns.length + ' campaigns');
-// Show each campaign sequentially
-for (var i = 0; i < campaigns.length; i++) {
-await showCampaign(campaigns[i]);
-@@ -127,6 +130,7 @@
-return sum + (c.duration_ms || 10000) + 2000 + GAP_MS;
-}, 0);
-var remaining = Math.max(loopMs - showTime, GAP_MS);
-      console.log('[overlay] cycle done, loopMs=' + loopMs + ', showTime=' + showTime + ', waiting ' + remaining + 'ms');
-await wait(remaining);
-}
-}
+  var SUPABASE_URL = 'https://qwasgcysgppajmdknlor.supabase.co';
+  var OVERLAY_BASE = 'https://divisionstream.live';
+  var frame = document.getElementById('overlay-frame');
+  var activeCampaigns = [];
+  var GAP_MS = 3000;
+
+  function enc(v) { return encodeURIComponent(v || ''); }
+
+  function layerParams(brandName) {
+    return 'layer-name=BetaStream+-+' + enc(brandName) + '&layer-width=1920&layer-height=1080';
+  }
+
+  function buildUrl(c) {
+    var layer = layerParams(c.brand_name);
+    var type = (c.overlay_type || '').toLowerCase();
+
+    if (type === 'rive' && c.rive_url) {
+      return OVERLAY_BASE + '/rive-overlay.html?rive_url=' + enc(c.rive_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    }
+    if (type =
