@@ -25,8 +25,9 @@
 <body>
 <iframe id="overlay-frame" style="display:none"></iframe>
 
-<script>
+<script data-cfasync="false" type="text/javascript">
 (function() {
+   console.log('[overlay] script started');
   var params = new URLSearchParams(window.location.search);
   var streamerId = params.get('sid');
   if (!streamerId) return;
