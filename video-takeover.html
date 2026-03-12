@@ -54,6 +54,8 @@
       setTimeout(function() {
         el.style.display = 'none';
         if (isVideo) el.pause();
+        // Tell parent iframe we are done so it can move to next campaign
+        window.parent.postMessage({ type: 'overlay-done' }, '*');
       }, 700);
     }
 
@@ -74,7 +76,6 @@
         el.style.display = 'block';
       }
 
-      // Fade in
       requestAnimationFrame(function() {
         backdrop.style.opacity = '1';
         el.style.opacity = '1';
@@ -84,7 +85,6 @@
         // Play full video — fade out only when it ends naturally
         el.onended = function() { fadeOut(el); };
       } else {
-        // Use explicit duration (or default 10s for GIFs/images)
         var dur = (duration && duration > 0) ? duration : 10000;
         setTimeout(function() { fadeOut(el); }, dur);
       }
