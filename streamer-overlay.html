@@ -1,145 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; frame-src *;">
-<meta name="viewport" content="width=1920, height=1080">
-<title>BetaStream Overlay</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: transparent !important;
-    width: 1920px;
-    height: 1080px;
-    overflow: hidden;
-  }
-  #overlay-frame {
-    position: fixed;
-    inset: 0;
-    width: 1920px;
-    height: 1080px;
-    border: 0;
-    background: transparent;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; frame-src *;">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>BetaStream Overlay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent !important; width: 1920px; height: 1080px; overflow: hidden; }
+    #overlay-frame { position: fixed; inset: 0; width: 1920px; height: 1080px; border: 0; background: transparent; }
+  </style>
 </head>
 <body>
-<iframe id="overlay-frame" style="display:none"></iframe>
+  <iframe id="overlay-frame" style="display:none" allow="autoplay"></iframe>
+  <script data-cfasync="false" type="text/javascript">
+  (function() {
+    console.log('[overlay] script started');
+    document.title = 'BetaStream Overlay – loading…';
 
-<script data-cfasync="false" type="text/javascript">
-(function() {
-  console.log('[overlay] script started');
-  document.title = 'BetaStream Overlay – loading…';
-  var params = new URLSearchParams(window.location.search);
-  var streamerId = params.get('sid');
-  if (!streamerId) return;
+    var params     = new URLSearchParams(window.location.search);
+    var streamerId = params.get('sid');
+    if (!streamerId) return;
 
-  var SUPABASE_URL = 'https://qwasgcysgppajmdknlor.supabase.co';
-  var OVERLAY_BASE = 'https://divisionstream.live';
-  var frame = document.getElementById('overlay-frame');
-  var activeCampaigns = [];
-  var GAP_MS = 3000;
+    var SUPABASE_URL  = 'https://qwasgcysgppajmdknlor.supabase.co';
+    var OVERLAY_BASE  = 'https://divisionstream.live';
+    var frame         = document.getElementById('overlay-frame');
+    var activeCampaigns = [];
+    var GAP_MS        = 3000;
 
-  function enc(v) { return encodeURIComponent(v || ''); }
+    function enc(v) { return encodeURIComponent(v || ''); }
 
-  function layerParams(brandName) {
-    return 'layer-name=BetaStream+-+' + enc(brandName) + '&layer-width=1920&layer-height=1080';
-  }
-
-  function buildUrl(c) {
-    var layer = layerParams(c.brand_name);
-    var type = (c.overlay_type || '').toLowerCase();
-
-    if (type === 'rive' && c.rive_url) {
-      return OVERLAY_BASE + '/rive-overlay.html?rive_url=' + enc(c.rive_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    }
-    if (type === 'gif' && c.animation_url) {
-      return OVERLAY_BASE + '/gif-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    }
-    if (type === 'video-takeover' && c.animation_url) {
-      return OVERLAY_BASE + '/video-takeover.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    }
-    if (type === 'video' && c.animation_url) {
-      return OVERLAY_BASE + '/video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    function layerParams(brandName) {
+      return 'layer-name=BetaStream+-+' + enc(brandName) + '&layer-width=1920&layer-height=1080';
     }
 
-    var color = (c.primary_color || '').replace(/^#/, '');
-    var base = 'brand_name=' + enc(c.brand_name) + '&tagline=' + enc(c.tagline) + '&color=' + enc(color)
-      + '&duration=' + c.duration_ms + '&loop=0&promo=' + enc(c.promo_code) + '&logo=' + enc(c.logo_url) + '&' + layer;
-    return OVERLAY_BASE + '/overlay-slide.html?' + base;
-  }
+    function buildUrl(c) {
+      var layer = layerParams(c.brand_name);
+      var type  = (c.overlay_type || '').toLowerCase();
+      if (type === 'rive' && c.rive_url) {
+        return OVERLAY_BASE + '/rive-overlay.html?rive_url=' + enc(c.rive_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+      }
+      if (type === 'gif' && c.animation_url) {
+        return OVERLAY_BASE + '/gif-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+      }
+      if (type === 'video-takeover' && c.animation_url) {
+        return OVERLAY_BASE + '/video-takeover.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+      }
+      if (type === 'video' && c.animation_url) {
+        return OVERLAY_BASE + '/video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+      }
+      var color = (c.primary_color || '').replace(/^#/, '');
+      var base  = 'brand_name=' + enc(c.brand_name) + '&tagline=' + enc(c.tagline) + '&color=' + enc(color) + '&duration=' + c.duration_ms + '&loop=0&promo=' + enc(c.promo_code) + '&logo=' + enc(c.logo_url) + '&' + layer;
+      return OVERLAY_BASE + '/overlay-slide.html?' + base;
+    }
 
-  function wait(ms) {
-    return new Promise(function(resolve) { setTimeout(resolve, ms); });
-  }
+    function wait(ms) { return new Promise(function(resolve) { setTimeout(resolve, ms); }); }
 
-  function showCampaign(c) {
-    return new Promise(function(resolve) {
-      var url = buildUrl(c);
-      var dur = (c.duration_ms || 10000) + 2000;
-      console.log('[overlay] showing: ' + c.brand_name + ' (' + c.overlay_type + ') for ' + dur + 'ms, url=' + url);
-      frame.src = url;
-      frame.style.display = 'block';
-      setTimeout(function() {
-        frame.style.display = 'none';
-        frame.src = 'about:blank';
-        console.log('[overlay] finished: ' + c.brand_name);
-        resolve();
-      }, dur);
+    function showCampaign(c) {
+      return new Promise(function(resolve) {
+        var url  = buildUrl(c);
+        var type = (c.overlay_type || '').toLowerCase();
+        console.log('[overlay] showing: ' + c.brand_name + ' (' + type + ') url=' + url);
+        frame.src = url;
+        frame.style.display = 'block';
+
+        if (type === 'video-takeover') {
+          // Wait for the child iframe to signal it has finished playing
+          var fallback = setTimeout(done, 300000); // 5 min safety net
+          function done() {
+            clearTimeout(fallback);
+            window.removeEventListener('message', onMsg);
+            frame.style.display = 'none';
+            frame.src = 'about:blank';
+            console.log('[overlay] finished (postMessage): ' + c.brand_name);
+            resolve();
+          }
+          function onMsg(e) {
+            if (e.data && e.data.type === 'overlay-done') done();
+          }
+          window.addEventListener('message', onMsg);
+        } else {
+          // All other overlay types use duration-based timeout
+          var dur = (c.duration_ms && c.duration_ms > 0) ? c.duration_ms + 2000 : 120000;
+          setTimeout(function() {
+            frame.style.display = 'none';
+            frame.src = 'about:blank';
+            console.log('[overlay] finished: ' + c.brand_name);
+            resolve();
+          }, dur);
+        }
+      });
+    }
+
+    function poll() {
+      console.log('[overlay] polling, sid=' + streamerId);
+      return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId))
+        .then(function(r) { return r.json(); })
+        .then(function(campaigns) {
+          if (Array.isArray(campaigns)) {
+            activeCampaigns = campaigns;
+            console.log('[overlay] fetched ' + campaigns.length + ' campaigns');
+          }
+        })
+        .catch(function(err) { console.error('[overlay] poll error:', err); });
+    }
+
+    async function runCycle() {
+      console.log('[overlay] runCycle started');
+      while (true) {
+        var campaigns = activeCampaigns.slice();
+        if (campaigns.length === 0) {
+          console.log('[overlay] no campaigns, waiting 5s...');
+          await wait(5000);
+          continue;
+        }
+        for (var i = 0; i < campaigns.length; i++) {
+          await showCampaign(campaigns[i]);
+          if (i < campaigns.length - 1) await wait(GAP_MS);
+        }
+        var loopMs = campaigns.reduce(function(min, c) {
+          var mins = c.loop_mins; if (!mins || mins <= 0) mins = 2;
+          return Math.min(min, mins * 60 * 1000);
+        }, 2 * 60 * 1000);
+        var showTime = campaigns.reduce(function(sum, c) {
+          return sum + (c.duration_ms || 10000) + 2000 + GAP_MS;
+        }, 0);
+        var remaining = Math.max(loopMs - showTime, GAP_MS);
+        console.log('[overlay] cycle done, waiting ' + remaining + 'ms');
+        await wait(remaining);
+      }
+    }
+
+    poll().then(function() {
+      setInterval(poll, 30000);
+      runCycle();
     });
-  }
-
-  function poll() {
-    console.log('[overlay] polling for campaigns, sid=' + streamerId);
-    return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId))
-      .then(function(r) { return r.json(); })
-      .then(function(campaigns) {
-        if (Array.isArray(campaigns)) {
-          activeCampaigns = campaigns;
-          console.log('[overlay] fetched ' + campaigns.length + ' campaigns:', campaigns.map(function(c) { return c.brand_name + ' (' + c.overlay_type + ')'; }));
-        }
-      })
-      .catch(function(err) { console.error('[overlay] poll error:', err); });
-  }
-
-  async function runCycle() {
-    console.log('[overlay] runCycle started');
-    while (true) {
-      var campaigns = activeCampaigns.slice();
-      if (campaigns.length === 0) {
-        console.log('[overlay] no campaigns, waiting 5s...');
-        await wait(5000);
-        continue;
-      }
-
-      console.log('[overlay] cycle start, ' + campaigns.length + ' campaigns');
-      for (var i = 0; i < campaigns.length; i++) {
-        await showCampaign(campaigns[i]);
-        if (i < campaigns.length - 1) {
-          await wait(GAP_MS);
-        }
-      }
-
-      var loopMs = campaigns.reduce(function(min, c) {
-        var mins = c.loop_mins;
-        if (!mins || mins <= 0) mins = 2;
-        return Math.min(min, mins * 60 * 1000);
-      }, 2 * 60 * 1000);
-
-      var showTime = campaigns.reduce(function(sum, c) {
-        return sum + (c.duration_ms || 10000) + 2000 + GAP_MS;
-      }, 0);
-      var remaining = Math.max(loopMs - showTime, GAP_MS);
-      console.log('[overlay] cycle done, loopMs=' + loopMs + ', showTime=' + showTime + ', waiting ' + remaining + 'ms');
-      await wait(remaining);
-    }
-  }
-
-  poll().then(function() {
-    setInterval(poll, 30000);
-    runCycle();
-  });
-})();
-</script>
+  })();
+  </script>
 </body>
 </html>
