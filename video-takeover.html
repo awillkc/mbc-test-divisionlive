@@ -1,104 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=1920, height=1080">
-<title>Video Takeover Overlay</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: transparent !important;
-    width: 1920px;
-    height: 1080px;
-    overflow: hidden;
-  }
-  #backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    opacity: 0;
-    transition: opacity 0.6s ease;
-  }
-  #media {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 70%;
-    height: 70%;
-    transform: translate(-50%, -50%);
-    object-fit: contain;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-    z-index: 1;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Video Takeover Overlay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: transparent !important;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+    }
+    #backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    #media {
+      position: fixed;
+      top: 50%; left: 50%;
+      width: 70%; height: 70%;
+      transform: translate(-50%, -50%);
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      z-index: 1;
+    }
+  </style>
 </head>
 <body>
-<div id="backdrop"></div>
-<img id="media" style="display:none" />
-<video id="media-video" style="display:none;position:fixed;top:50%;left:50%;width:70%;height:70%;transform:translate(-50%,-50%);object-fit:contain;opacity:0;transition:opacity 0.6s ease;z-index:1;" playsinline></video>
+  <div id="backdrop"></div>
+  <img id="media" style="display:none" />
+  <video id="media-video" style="display:none;position:fixed;top:50%;left:50%;width:70%;height:70%;transform:translate(-50%,-50%);object-fit:contain;opacity:0;transition:opacity 0.6s ease;z-index:1;" playsinline></video>
 
-<script>
-(function() {
-  var params = new URLSearchParams(window.location.search);
-  var url = params.get('url');
-  var duration = parseInt(params.get('duration') || '0', 10);
-  var loopMins = parseInt(params.get('loop') || '0', 10);
+  <script data-cfasync="false" type="text/javascript">
+  (function() {
+    var params   = new URLSearchParams(window.location.search);
+    var url      = params.get('url');
+    var duration = parseInt(params.get('duration') || '0', 10);
+    var loopMins = parseInt(params.get('loop') || '0', 10);
 
-  if (!url) return;
+    if (!url) return;
 
-  var backdrop = document.getElementById('backdrop');
-  var isVideo = /\.(webm|mp4)(\?|$)/i.test(url);
+    var backdrop = document.getElementById('backdrop');
+    var isVideo  = /\.(webm|mp4)(\?|$)/i.test(url);
 
-  function fadeOut(el) {
-    backdrop.style.opacity = '0';
-    el.style.opacity = '0';
-    setTimeout(function() {
-      el.style.display = 'none';
-      if (isVideo) el.pause();
-    }, 700);
-  }
+    function fadeOut(el) {
+      backdrop.style.opacity = '0';
+      el.style.opacity = '0';
+      setTimeout(function() {
+        el.style.display = 'none';
+        if (isVideo) el.pause();
+      }, 700);
+    }
 
-  function play() {
-    var el;
-    if (isVideo) {
-      el = document.getElementById('media-video');
-      el.src = url;
-      el.style.display = 'block';
-      el.play().catch(function() {
-        el.muted = true;
-        el.play().catch(function(){});
+    function play() {
+      var el;
+      if (isVideo) {
+        el = document.getElementById('media-video');
+        el.src = url;
+        el.style.display = 'block';
+        // Try unmuted first (works in OBS); fall back to muted if browser blocks autoplay
+        el.play().catch(function() {
+          el.muted = true;
+          el.play().catch(function() {});
+        });
+      } else {
+        el = document.getElementById('media');
+        el.src = url;
+        el.style.display = 'block';
+      }
+
+      // Fade in
+      requestAnimationFrame(function() {
+        backdrop.style.opacity = '1';
+        el.style.opacity = '1';
       });
-    } else {
-      el = document.getElementById('media');
-      el.src = url;
-      el.style.display = 'block';
+
+      if (isVideo) {
+        // Play full video — fade out only when it ends naturally
+        el.onended = function() { fadeOut(el); };
+      } else {
+        // Use explicit duration (or default 10s for GIFs/images)
+        var dur = (duration && duration > 0) ? duration : 10000;
+        setTimeout(function() { fadeOut(el); }, dur);
+      }
     }
 
-    // Fade in
-    requestAnimationFrame(function() {
-      backdrop.style.opacity = '1';
-      el.style.opacity = '1';
-    });
-
-    if (isVideo) {
-      // Always play full video — fade out when it ends
-      el.onended = function() { fadeOut(el); };
-    } else {
-      // Use explicit duration (or default 10s for GIFs/images)
-      var dur = (duration && duration > 0) ? duration : 10000;
-      setTimeout(function() { fadeOut(el); }, dur);
-    }
-  }
-
-  // Initial play
-  play();
-
-  // Loop
-  if (loopMins > 0) {
-    setInterval(play, loopMins * 60 * 1000);
-  }
-})();
-</script>
+    play();
+    if (loopMins > 0) setInterval(play, loopMins * 60 * 1000);
+  })();
+  </script>
 </body>
 </html>
