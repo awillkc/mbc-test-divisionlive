@@ -7,7 +7,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 1920px; height: 1080px;
-      overflow: hidden;
+     overflow: hidden;
       background: transparent !important;
       background-color: transparent !important;
     }
@@ -83,7 +83,6 @@
         const vid = document.createElement('video');
         vid.autoplay = true;
         vid.loop = true;
-        vid.muted = true;
         vid.playsInline = true;
         const src = document.createElement('source');
         src.src  = decoded;
@@ -91,8 +90,10 @@
         vid.appendChild(src);
         wrap.appendChild(vid);
         vid.load();
-        vid.play();
-      }
+vid.play().catch(function() {
+  vid.muted = true;
+  vid.play().catch(function() {});
+});      }
     }
 
     function play() {
@@ -101,8 +102,13 @@
       void el.offsetWidth;
       el.classList.add('playing');
       const vid = wrap.querySelector('video');
-      if (vid) { vid.currentTime = 0; vid.play(); }
-      setTimeout(() => el.classList.add('hidden'), duration);
+if (vid) {
+  vid.currentTime = 0;
+  vid.play().catch(function() {
+    vid.muted = true;
+    vid.play().catch(function() {});
+  });
+}      setTimeout(() => el.classList.add('hidden'), duration);
     }
 
     play();
