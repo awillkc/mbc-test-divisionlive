@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;" />
+  <title>Division Static Frame Overlay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+    #frame { width: 1920px; height: 1080px; object-fit: contain; display: none; position: absolute; top: 0; left: 0; }
+  </style>
+</head>
+<body>
+  <img id="frame" alt="" />
+
+  <script data-cfasync="false">
+    (function () {
+      const EDGE_FN_URL = 'https://qwasgcysgppajmdknlor.supabase.co/functions/v1/streamer-overlay-data';
+      const POLL_INTERVAL = 30000; // 30 seconds
+
+      const params = new URLSearchParams(window.location.search);
+      const sid = params.get('sid');
+      if (!sid) { console.warn('[frame-overlay] No sid parameter'); return; }
+
+      const frameEl = document.getElementById('frame');
+      let currentFrameUrl = null;
+
+      async function fetchFrameUrl() {
+        try {
+          const res = await fetch(EDGE_FN_URL + '?sid=' + encodeURIComponent(sid));
+          if (!res.ok) { console.error('[frame-overlay] Fetch error', res.status); return; }
+          const campaigns = await res.json();
+
+          // Find the first active campaign with a frame_url
+          let frameUrl = null;
+          for (const c of campaigns) {
+            if (c.frame_url) { frameUrl = c.frame_url; break; }
+          }
+
+          if (frameUrl && frameUrl !== currentFrameUrl) {
+            currentFrameUrl = frameUrl;
+            frameEl.src = frameUrl;
+            frameEl.style.display = 'block';
+            console.log('[frame-overlay] Showing frame:', frameUrl);
+          } else if (!frameUrl && currentFrameUrl) {
+            currentFrameUrl = null;
+            frameEl.src = '';
+            frameEl.style.display = 'none';
+            console.log('[frame-overlay] No frame — hiding');
+          }
+        } catch (err) {
+          console.error('[frame-overlay] Poll error:', err);
+        }
+      }
+
+      // Initial fetch + poll
+      fetchFrameUrl();
+      setInterval(fetchFrameUrl, POLL_INTERVAL);
+    })();
+  </script>
+</body>
+</html>
