@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Quarter Video Overlay</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: transparent !important;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+  }
+  #panel {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 840px;
+    height: 472px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  #panel video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div id="panel">
+  <video id="vid" playsinline></video>
+</div>
+
+<script data-cfasync="false" type="text/javascript">
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var url = params.get('url');
+  var duration = parseInt(params.get('duration') || '0', 10);
+  var loopMins = parseInt(params.get('loop') || '0', 10);
+  var color = params.get('color');
+
+  if (!url) return;
+
+  var panel = document.getElementById('panel');
+  var vid = document.getElementById('vid');
+
+  if (color) {
+    panel.style.border = '3px solid #' + color.replace(/^#/, '');
+  }
+
+  function fadeIn() {
+    requestAnimationFrame(function() { panel.style.opacity = '1'; });
+  }
+
+  function fadeOut(cb) {
+    panel.style.opacity = '0';
+    setTimeout(function() {
+      vid.pause();
+      if (cb) cb();
+    }, 600);
+  }
+
+  function notifyDone() {
+    try { window.parent.postMessage({ type: 'overlay-done' }, '*'); } catch(e) {}
+  }
+
+  function play() {
+    vid.src = url;
+    vid.play().then(function() {
+      fadeIn();
+    }).catch(function() {
+      vid.muted = true;
+      vid.play().then(function() {
+        fadeIn();
+      }).catch(function() {});
+    });
+
+    if (duration > 0) {
+      setTimeout(function() { fadeOut(notifyDone); }, duration);
+    } else {
+      vid.onended = function() { fadeOut(notifyDone); };
+    }
+  }
+
+  play();
+
+  if (loopMins > 0) {
+    setInterval(play, loopMins * 60 * 1000);
+  }
+})();
+</script>
+</body>
+</html>
