@@ -39,23 +39,18 @@
   <div id="panel">
     <video id="video" playsinline preload="auto"></video>
   </div>
-
   <script data-cfasync="false" type="text/javascript">
   (function() {
     var params   = new URLSearchParams(window.location.search);
     var url      = params.get('url');
     var duration = parseInt(params.get('duration') || '0', 10);
     var loopMins = parseInt(params.get('loop') || '0', 10);
-
     if (!url) return;
-
     var panel = document.getElementById('panel');
     var video = document.getElementById('video');
-
     function notifyDone() {
       try { window.parent.postMessage({ type: 'overlay-done' }, '*'); } catch(e) {}
     }
-
     function fadeOut(cb) {
       panel.style.opacity = '0';
       setTimeout(function() {
@@ -63,7 +58,6 @@
         if (cb) cb();
       }, 600);
     }
-
     function play() {
       video.src = url;
       video.play().then(function() {
@@ -73,4 +67,22 @@
       }).catch(function() {
         video.muted = true;
         video.play().then(function() {
-          requestAnimationF
+          requestAnimationFrame(function() {
+            panel.style.opacity = '1';
+          });
+        }).catch(function() {});
+      });
+      if (duration > 0) {
+        setTimeout(function() { fadeOut(notifyDone); }, duration);
+      } else {
+        video.onended = function() { fadeOut(notifyDone); };
+      }
+    }
+    play();
+    if (loopMins > 0) {
+      setInterval(play, loopMins * 60 * 1000);
+    }
+  })();
+  </script>
+</body>
+</html>
