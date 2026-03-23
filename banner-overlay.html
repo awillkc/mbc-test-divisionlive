@@ -90,13 +90,31 @@
     banner.appendChild(logoEl);
   }
 
-  if (url) {
+ if (url) {
+  var decodedUrl = decodeURIComponent(url);
+  var isVideo = /\.(mp4|webm)(\?|$)/i.test(decodedUrl);
+  if (isVideo) {
+    var vid = document.createElement('video');
+    vid.id = 'banner-img';
+    vid.src = decodedUrl;
+    vid.autoplay = true;
+    vid.loop = true;
+    vid.muted = false;
+    vid.playsInline = true;
+    vid.style.maxWidth = '100%';
+    vid.style.maxHeight = '100%';
+    vid.style.objectFit = 'contain';
+    vid.play().catch(function() { vid.muted = true; vid.play(); });
+    banner.appendChild(vid);
+  } else {
     var img = document.createElement('img');
     img.id = 'banner-img';
-    img.src = decodeURIComponent(url);
+    img.src = decodedUrl;
     img.alt = 'Banner';
     banner.appendChild(img);
-  } else if (text) {
+  }
+}
+  else if (text) {
     var span = document.createElement('span');
     span.id = 'banner-text';
     span.textContent = decodeURIComponent(text);
