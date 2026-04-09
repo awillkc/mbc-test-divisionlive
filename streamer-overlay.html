@@ -7,15 +7,11 @@
 <title>DivisionStream Overlay</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html {
-    background: transparent !important;
-  }
   body {
     background: transparent !important;
     width: 1920px;
     height: 1080px;
     overflow: hidden;
-    color-scheme: normal;
   }
   #overlay-frame {
     position: fixed;
@@ -23,21 +19,18 @@
     width: 1920px;
     height: 1080px;
     border: 0;
-    background: transparent !important;
-    color-scheme: normal;
+    background: transparent;
   }
 </style>
 </head>
 <body>
-<iframe id="overlay-frame" 
-  style="display:none;background:transparent;color-scheme:normal" 
-  allow="autoplay"
-  allowtransparency="true"></iframe>
+<iframe id="overlay-frame" style="display:none" allow="autoplay"></iframe>
 
 <script data-cfasync="false" type="text/javascript">
 (function() {
   console.log('[overlay] page loaded, starting fresh');
   document.title = 'DivisionStream Overlay – loading…';
+
   var params = new URLSearchParams(window.location.search);
   var streamerId = params.get('sid');
   if (!streamerId) return;
@@ -73,9 +66,6 @@
     if (type === 'video-takeover' && c.animation_url) {
       return OVERLAY_BASE + '/video-takeover.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
     }
-    if (type === 'video' && c.animation_url) {
-      return OVERLAY_BASE + '/video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    }
     if (type === 'banner' && (c.animation_url || c.tagline)) {
       var bcolor = (c.primary_color || '').replace(/^#/, '');
       return OVERLAY_BASE + '/banner-overlay.html?url=' + enc(c.animation_url) + '&text=' + enc(c.tagline) + '&logo=' + enc(c.logo_url) + '&duration=' + c.duration_ms + '&loop=0&color=' + enc(bcolor) + '&' + layer;
@@ -91,7 +81,7 @@
     return new Promise(function(resolve) {
       var url = buildUrl(c);
       var type = (c.overlay_type || '').toLowerCase();
-      console.log('[overlay] showing: ' + c.brand_name + ' (' + type + '), loop_mins=' + c.loop_mins + ', duration_ms=' + c.duration_ms);
+      console.log('[overlay] showing: ' + c.brand_name + ' (' + type + ')');
       frame.src = url;
       frame.style.display = 'block';
 
@@ -108,8 +98,12 @@
       }
 
       var fallbackTimer;
-      if (type === 'video-takeover' || type === 'vertical-video' || type === 'quarter-video') {
+      if (type === 'video-takeover') {
         fallbackTimer = setTimeout(done, 300000);
+        window.addEventListener('message', onMsg);
+      } else if (type === 'vertical-video' || type === 'quarter-video') {
+        var dur = (c.duration_ms && c.duration_ms > 0) ? c.duration_ms + 2000 : 30000;
+        fallbackTimer = setTimeout(done, dur);
         window.addEventListener('message', onMsg);
       } else {
         var dur = (c.duration_ms && c.duration_ms > 0) ? c.duration_ms + 2000 : 120000;
@@ -119,10 +113,9 @@
   }
 
   function poll() {
-    console.log('[overlay] polling for eligible campaigns, sid=' + streamerId);
+    console.log('[overlay] polling, sid=' + streamerId);
     return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId) + '&t=' + Date.now(), {
-      cache: 'no-store',
-      headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache, no-store' }
+      cache: 'no-store'
     })
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -130,11 +123,7 @@
       })
       .then(function(campaigns) {
         var list = Array.isArray(campaigns) ? campaigns : [];
-        console.log('[overlay] fetched ' + list.length + ' eligible campaigns');
-        for (var i = 0; i < list.length; i++) {
-          var c = list[i];
-          console.log('[overlay] campaign[' + i + ']: ' + c.brand_name + ' | id=' + c.id + ' | loop_mins=' + c.loop_mins + ' | duration_ms=' + c.duration_ms + ' | overlay_type=' + c.overlay_type);
-        }
+        console.log('[overlay] fetched ' + list.length + ' campaigns');
         return list;
       })
       .catch(function(err) {
@@ -153,24 +142,13 @@
         campaignId: c.id,
         durationMs: Number(c.duration_ms) || 0
       })
-    })
-      .then(function(r) {
-        if (!r.ok) {
-          return r.text().then(function(text) { throw new Error(text || ('HTTP ' + r.status)); });
-        }
-        return r.json().catch(function() { return { ok: true }; });
-      })
-      .then(function() {
-        console.log('[overlay] recorded play for campaign ' + c.id);
-      })
-      .catch(function(err) {
-        console.error('[overlay] session record error:', err);
-      });
+    }).catch(function(err) {
+      console.error('[overlay] session record error:', err);
+    });
   }
 
   var lastPlayed = {};
   var playedOnce = {};
-  var cachedCampaigns = [];
   var playing = false;
 
   function assetKey(campaignId, asset, index) {
@@ -244,10 +222,9 @@
   async function playQueue(queue) {
     if (queue.length === 0) return;
     playing = true;
-    console.log('[overlay] playing ' + queue.length + ' due assets');
     for (var i = 0; i < queue.length; i++) {
       var a = queue[i];
-      console.log('[overlay] playing asset key=' + a.key + ' (' + a.campaign.brand_name + ' / ' + a.campaign.overlay_type + ')');
+      console.log('[overlay] playing: ' + a.campaign.brand_name + ' / ' + a.campaign.overlay_type);
       await showCampaign(a.campaign);
       lastPlayed[a.key] = Date.now();
       if (a.loopMins <= 0) playedOnce[a.key] = true;
@@ -262,33 +239,28 @@
   var TICK_MS = 30000;
 
   async function runLoop() {
-    console.log('[overlay] runLoop started, waiting 1s for page init…');
+    console.log('[overlay] runLoop started');
     await new Promise(function(r) { setTimeout(r, 1000); });
 
     lastPlayed = {};
     playedOnce = {};
-    cachedCampaigns = [];
     playing = false;
 
-    console.log('[overlay] init complete, per-asset scheduler tick=' + TICK_MS + 'ms');
-
-    cachedCampaigns = await poll();
-    var allAssets = flattenAssets(cachedCampaigns);
-    var initialDue = getDueAssets(allAssets);
-    if (initialDue.length > 0) await playQueue(initialDue);
+    var campaigns = await poll();
+    var allAssets = flattenAssets(campaigns);
+    var due = getDueAssets(allAssets);
+    if (due.length > 0) await playQueue(due);
 
     while (true) {
       try {
         await new Promise(function(r) { setTimeout(r, TICK_MS); });
-        cachedCampaigns = await poll();
-        allAssets = flattenAssets(cachedCampaigns);
+        campaigns = await poll();
+        allAssets = flattenAssets(campaigns);
         if (playing) continue;
-        var due = getDueAssets(allAssets);
-        if (due.length > 0) {
-          await playQueue(due);
-        }
-      } catch (err) {
-        console.error('[overlay] loop error, restarting in 5s:', err);
+        due = getDueAssets(allAssets);
+        if (due.length > 0) await playQueue(due);
+      } catch(err) {
+        console.error('[overlay] loop error:', err);
         await new Promise(function(r) { setTimeout(r, 5000); });
       }
     }
