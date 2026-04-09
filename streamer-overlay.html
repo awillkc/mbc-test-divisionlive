@@ -7,11 +7,15 @@
 <title>DivisionStream Overlay</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html {
+    background: transparent !important;
+  }
   body {
     background: transparent !important;
     width: 1920px;
     height: 1080px;
     overflow: hidden;
+    color-scheme: normal;
   }
   #overlay-frame {
     position: fixed;
@@ -19,12 +23,16 @@
     width: 1920px;
     height: 1080px;
     border: 0;
-    background: transparent;
+    background: transparent !important;
+    color-scheme: normal;
   }
 </style>
 </head>
 <body>
-<iframe id="overlay-frame" style="display:none" allow="autoplay"></iframe>
+<iframe id="overlay-frame" 
+  style="display:none;background:transparent;color-scheme:normal" 
+  allow="autoplay"
+  allowtransparency="true"></iframe>
 
 <script data-cfasync="false" type="text/javascript">
 (function() {
@@ -87,14 +95,14 @@
       frame.src = url;
       frame.style.display = 'block';
 
-  function done() {
-  clearTimeout(fallbackTimer);
-  window.removeEventListener('message', onMsg);
-  frame.style.display = 'none';
-  frame.src = 'about:blank';
-  console.log('[overlay] finished: ' + c.brand_name);
-  resolve();
-}
+      function done() {
+        clearTimeout(fallbackTimer);
+        window.removeEventListener('message', onMsg);
+        frame.style.display = 'none';
+        frame.src = 'about:blank';
+        console.log('[overlay] finished: ' + c.brand_name);
+        resolve();
+      }
       function onMsg(e) {
         if (e.data && e.data.type === 'overlay-done') done();
       }
@@ -222,7 +230,6 @@
     for (var i = 0; i < allAssets.length; i++) {
       var a = allAssets[i];
       var lm = a.loopMins;
-
       if (lm <= 0) {
         if (playedOnce[a.key]) continue;
       } else {
@@ -256,7 +263,6 @@
 
   async function runLoop() {
     console.log('[overlay] runLoop started, waiting 1s for page init…');
-
     await new Promise(function(r) { setTimeout(r, 1000); });
 
     lastPlayed = {};
@@ -274,12 +280,9 @@
     while (true) {
       try {
         await new Promise(function(r) { setTimeout(r, TICK_MS); });
-
         cachedCampaigns = await poll();
         allAssets = flattenAssets(cachedCampaigns);
-
         if (playing) continue;
-
         var due = getDueAssets(allAssets);
         if (due.length > 0) {
           await playQueue(due);
