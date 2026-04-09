@@ -111,9 +111,10 @@
     });
   }
 
- return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId) + '&t=' + Date.now(), {
-  cache: 'no-store'
-})
+ function poll() {
+    return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId) + '&t=' + Date.now(), {
+      cache: 'no-store'
+    })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var list = Array.isArray(data) ? data : [];
