@@ -13,31 +13,39 @@
 </head>
 <body>
   <img id="frame" alt="" />
-
   <script data-cfasync="false">
     (function () {
-      const EDGE_FN_URL = 'https://qwasgcysgppajmdknlor.supabase.co/functions/v1/streamer-overlay-data';
-      const POLL_INTERVAL = 30000; // 30 seconds
-
-      const params = new URLSearchParams(window.location.search);
-      const sid = params.get('sid');
+      var EDGE_FN_URL = 'https://qwasgcysgppajmdknlor.supabase.co/functions/v1/streamer-overlay-data';
+      var POLL_INTERVAL = 30000;
+      var params = new URLSearchParams(window.location.search);
+      var sid = params.get('sid');
       if (!sid) { console.warn('[frame-overlay] No sid parameter'); return; }
+      
+      var frameEl = document.getElementById('frame');
+      var currentFrameUrl = null;
 
-      const frameEl = document.getElementById('frame');
-      let currentFrameUrl = null;
-
-      async function fetchFrameUrl() {
-        try {
-          const res = await fetch(EDGE_FN_URL + '?sid=' + encodeURIComponent(sid));
-          if (!res.ok) { console.error('[frame-overlay] Fetch error', res.status); return; }
-          const campaigns = await res.json();
-
-          // Find the first active campaign with a frame_url
-          let frameUrl = null;
-          for (const c of campaigns) {
-            if (c.frame_url) { frameUrl = c.frame_url; break; }
+      function fetchFrameUrl() {
+        fetch(EDGE_FN_URL + '?sid=' + encodeURIComponent(sid) + '&t=' + Date.now(), {
+          cache: 'no-store'
+        })
+        .then(function(res) {
+          if (!res.ok) { 
+            console.error('[frame-overlay] Fetch error', res.status); 
+            return null; 
           }
-
+          return res.json();
+        })
+        .then(function(campaigns) {
+          if (!campaigns) return;
+          
+          var frameUrl = null;
+          for (var i = 0; i < campaigns.length; i++) {
+            if (campaigns[i].frame_url) {
+              frameUrl = campaigns[i].frame_url;
+              break;
+            }
+          }
+          
           if (frameUrl && frameUrl !== currentFrameUrl) {
             currentFrameUrl = frameUrl;
             frameEl.src = frameUrl;
@@ -49,13 +57,14 @@
             frameEl.style.display = 'none';
             console.log('[frame-overlay] No frame — hiding');
           }
-        } catch (err) {
+        })
+        .catch(function(err) {
           console.error('[frame-overlay] Poll error:', err);
-        }
+        });
       }
 
-      // Initial fetch + poll
-      fetchFrameUrl();
+      console.log('[frame-overlay] Starting, sid=' + sid);
+      setTimeout(fetchFrameUrl, 1000);
       setInterval(fetchFrameUrl, POLL_INTERVAL);
     })();
   </script>
