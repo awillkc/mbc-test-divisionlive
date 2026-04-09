@@ -111,7 +111,7 @@
     });
   }
 
- function poll() {
+  function poll() {
     return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId) + '&t=' + Date.now(), {
       cache: 'no-store'
     })
@@ -201,7 +201,7 @@
       if (a.loopMins <= 0) playedOnce[a.key] = true;
       recordSession(a.campaign);
       if (index < queue.length - 1) {
-        return wait(GAP_MS).then(function() {
+        wait(GAP_MS).then(function() {
           playQueue(queue, index + 1);
         });
       } else {
