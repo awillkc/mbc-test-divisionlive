@@ -25,159 +25,136 @@
 </head>
 <body>
 <iframe id="overlay-frame" style="display:none" allow="autoplay"></iframe>
+
 <script data-cfasync="false" type="text/javascript">
 (function() {
   console.log('[overlay] page loaded, starting fresh');
-
+  document.title = 'DivisionStream Overlay – loading…';
   var params = new URLSearchParams(window.location.search);
   var streamerId = params.get('sid');
-  if (!streamerId) { console.log('[overlay] no sid, exiting'); return; }
+  if (!streamerId) return;
 
   var SUPABASE_URL = 'https://qwasgcysgppajmdknlor.supabase.co';
   var OVERLAY_BASE = 'https://divisionstream.live';
   var frame = document.getElementById('overlay-frame');
   var GAP_MS = 3000;
-  var TICK_MS = 30000;
-  var SKIP_TYPES = { frame: true };
-
-  var lastPlayed = {};
-  var playedOnce = {};
-  var playing = false;
-  var cachedAssets = [];
 
   function enc(v) { return encodeURIComponent(v || ''); }
 
-  function buildUrl(c) {
-    var type = (c.overlay_type || '').toLowerCase();
-    var layer = 'layer-name=DivisionStream+-+' + enc(c.brand_name) + '&layer-width=1920&layer-height=1080';
-
-    if (type === 'rive' && c.animation_url)
-      return OVERLAY_BASE + '/rive-overlay.html?rive_url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    if (type === 'gif' && c.animation_url)
-      return OVERLAY_BASE + '/gif-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    if (type === 'vertical-video' && c.animation_url)
-      return OVERLAY_BASE + '/vertical-video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    if (type === 'quarter-video' && c.animation_url) {
-      var qc = (c.primary_color || '').replace(/^#/, '');
-      return OVERLAY_BASE + '/quarter-video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&color=' + enc(qc) + '&' + layer;
-    }
-    if (type === 'video-takeover' && c.animation_url)
-      return OVERLAY_BASE + '/video-takeover.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
-    if (type === 'banner' && (c.animation_url || c.tagline)) {
-      var bc = (c.primary_color || '').replace(/^#/, '');
-      return OVERLAY_BASE + '/banner-overlay.html?url=' + enc(c.animation_url) + '&text=' + enc(c.tagline) + '&logo=' + enc(c.logo_url) + '&duration=' + c.duration_ms + '&loop=0&color=' + enc(bc) + '&' + layer;
-    }
-    var color = (c.primary_color || '').replace(/^#/, '');
-    return OVERLAY_BASE + '/overlay-slide.html?brand_name=' + enc(c.brand_name) + '&tagline=' + enc(c.tagline) + '&color=' + enc(color) + '&duration=' + c.duration_ms + '&loop=0&promo=' + enc(c.promo_code) + '&logo=' + enc(c.logo_url) + '&' + layer;
+  function layerParams(brandName) {
+    return 'layer-name=DivisionStream+-+' + enc(brandName) + '&layer-width=1920&layer-height=1080';
   }
 
-  function wait(ms) {
-    return new Promise(function(resolve) { setTimeout(resolve, ms); });
+  function buildUrl(c) {
+    var layer = layerParams(c.brand_name);
+    var type = (c.overlay_type || '').toLowerCase();
+
+    if (type === 'rive' && c.rive_url) {
+      return OVERLAY_BASE + '/rive-overlay.html?rive_url=' + enc(c.rive_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    }
+    if (type === 'gif' && c.animation_url) {
+      return OVERLAY_BASE + '/gif-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    }
+    if (type === 'vertical-video' && c.animation_url) {
+      return OVERLAY_BASE + '/vertical-video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    }
+    if (type === 'quarter-video' && c.animation_url) {
+      var qcolor = (c.primary_color || '').replace(/^#/, '');
+      return OVERLAY_BASE + '/quarter-video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&color=' + enc(qcolor) + '&' + layer;
+    }
+    if (type === 'video-takeover' && c.animation_url) {
+      return OVERLAY_BASE + '/video-takeover.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    }
+    if (type === 'video' && c.animation_url) {
+      return OVERLAY_BASE + '/video-overlay.html?url=' + enc(c.animation_url) + '&duration=' + c.duration_ms + '&loop=0&' + layer;
+    }
+    if (type === 'banner' && (c.animation_url || c.tagline)) {
+      var bcolor = (c.primary_color || '').replace(/^#/, '');
+      return OVERLAY_BASE + '/banner-overlay.html?url=' + enc(c.animation_url) + '&text=' + enc(c.tagline) + '&logo=' + enc(c.logo_url) + '&duration=' + c.duration_ms + '&loop=0&color=' + enc(bcolor) + '&' + layer;
+    }
+
+    var color = (c.primary_color || '').replace(/^#/, '');
+    var base = 'brand_name=' + enc(c.brand_name) + '&tagline=' + enc(c.tagline) + '&color=' + enc(color)
+      + '&duration=' + c.duration_ms + '&loop=0&promo=' + enc(c.promo_code) + '&logo=' + enc(c.logo_url) + '&' + layer;
+    return OVERLAY_BASE + '/overlay-slide.html?' + base;
   }
 
   function showCampaign(c) {
     return new Promise(function(resolve) {
-      var type = (c.overlay_type || '').toLowerCase();
       var url = buildUrl(c);
-      console.log('[overlay] showing: ' + c.brand_name + ' (' + type + ')');
+      var type = (c.overlay_type || '').toLowerCase();
+      console.log('[overlay] showing: ' + c.brand_name + ' (' + type + '), loop_mins=' + c.loop_mins + ', duration_ms=' + c.duration_ms);
       frame.src = url;
       frame.style.display = 'block';
 
       function done() {
-        clearTimeout(timer);
+        clearTimeout(fallbackTimer);
         window.removeEventListener('message', onMsg);
-        frame.style.display = 'none';
         frame.src = 'about:blank';
-        console.log('[overlay] done: ' + c.brand_name);
+        frame.style.display = 'none';
+        console.log('[overlay] finished: ' + c.brand_name);
         resolve();
       }
-
       function onMsg(e) {
         if (e.data && e.data.type === 'overlay-done') done();
       }
 
-      var timer;
+      var fallbackTimer;
       if (type === 'video-takeover') {
-        timer = setTimeout(done, 300000);
+        fallbackTimer = setTimeout(done, 300000);
         window.addEventListener('message', onMsg);
       } else if (type === 'vertical-video' || type === 'quarter-video') {
-        var dur = (c.duration_ms && c.duration_ms > 0) ? c.duration_ms + 2000 : 30000;
-        timer = setTimeout(done, dur);
+        var vFallback = (c.duration_ms && c.duration_ms > 0) ? c.duration_ms + 2000 : 30000;
+        fallbackTimer = setTimeout(done, vFallback);
         window.addEventListener('message', onMsg);
       } else {
         var dur = (c.duration_ms && c.duration_ms > 0) ? c.duration_ms + 2000 : 120000;
-        timer = setTimeout(done, dur);
+        fallbackTimer = setTimeout(done, dur);
       }
     });
   }
 
-  function poll() {
-    return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId) + '&t=' + Date.now(), {
-      cache: 'no-store'
+  function poll(force) {
+    console.log('[overlay] polling for eligible campaigns, sid=' + streamerId + (force ? ' (force=true)' : ''));
+    return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId) + (force ? '&force=true' : '') + '&t=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache, no-store' }
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var list = Array.isArray(data) ? data : [];
-      console.log('[overlay] poll: ' + list.length + ' campaigns');
-
-      var assets = [];
-      for (var i = 0; i < list.length; i++) {
-        var c = list[i];
-        if (c.assets && c.assets.length > 0) {
-          for (var k = 0; k < c.assets.length; k++) {
-            var a = c.assets[k];
-            if (SKIP_TYPES[(a.overlay_type || '').toLowerCase()]) continue;
-            assets.push({
-              key: a.id || (c.id + ':' + a.sequence_order),
-              loopMins: typeof a.loop_mins === 'number' ? a.loop_mins : c.loop_mins || 0,
-              campaign: {
-                id: c.id,
-                brand_name: c.brand_name,
-                logo_url: c.logo_url,
-                tagline: c.tagline,
-                promo_code: c.promo_code,
-                overlay_type: a.overlay_type,
-                animation_url: a.asset_url,
-                duration_ms: a.duration_ms,
-                loop_mins: a.loop_mins,
-                primary_color: a.primary_color
-              },
-              order: a.sequence_order || k
-            });
-          }
-        } else {
-          if (SKIP_TYPES[(c.overlay_type || '').toLowerCase()]) continue;
-          assets.push({
-            key: c.id + ':legacy',
-            loopMins: c.loop_mins || 0,
-            campaign: c,
-            order: 1
-          });
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(campaigns) {
+        var list = Array.isArray(campaigns) ? campaigns : [];
+        console.log('[overlay] fetched ' + list.length + ' eligible campaigns');
+        for (var i = 0; i < list.length; i++) {
+          var c = list[i];
+          console.log('[overlay] campaign[' + i + ']: ' + c.brand_name + ' | id=' + c.id + ' | loop_mins=' + c.loop_mins + ' | duration_ms=' + c.duration_ms + ' | overlay_type=' + c.overlay_type);
         }
-      }
-
-      assets.sort(function(a, b) { return a.order - b.order; });
-      cachedAssets = assets;
-      console.log('[overlay] ' + assets.length + ' playable assets');
-      return assets;
-    })
-    .catch(function(err) {
-      console.error('[overlay] poll error:', err);
-      return cachedAssets;
-    });
+        return list;
+      })
+      .catch(function(err) {
+        console.error('[overlay] poll error:', err);
+        return [];
+      });
   }
 
-  function getDue() {
-    var now = Date.now();
-    return cachedAssets.filter(function(a) {
-      if (a.loopMins <= 0) return !playedOnce[a.key];
-      var lp = lastPlayed[a.key];
-      return !lp || (now - lp) >= a.loopMins * 60 * 1000;
-    });
+  /** Poll with retry — OBS sometimes returns empty on first fetch after refresh */
+  function pollWithRetry(maxRetries, force) {
+    var attempt = 0;
+    function tryOnce() {
+      return poll(force).then(function(list) {
+        if (list.length > 0 || attempt >= maxRetries) return list;
+        attempt++;
+        console.log('[overlay] empty response on attempt ' + attempt + ', retrying in 2s…');
+        return new Promise(function(r) { setTimeout(r, 2000); }).then(tryOnce);
+      });
+    }
+    return tryOnce();
   }
 
   function recordSession(c) {
-    fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data', {
+    return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -186,64 +163,171 @@
         campaignId: c.id,
         durationMs: Number(c.duration_ms) || 0
       })
-    }).catch(function(e) { console.error('[overlay] record error:', e); });
+    })
+      .then(function(r) {
+        if (!r.ok) {
+          return r.text().then(function(text) { throw new Error(text || ('HTTP ' + r.status)); });
+        }
+        return r.json().catch(function() { return { ok: true }; });
+      })
+      .then(function() {
+        console.log('[overlay] recorded play for campaign ' + c.id);
+      })
+      .catch(function(err) {
+        console.error('[overlay] session record error:', err);
+      });
   }
 
-  function playQueue(queue, index) {
-    if (index >= queue.length) {
-      playing = false;
-      console.log('[overlay] queue complete');
-      return;
+  var lastPlayed = {};
+  var playedOnce = {};
+  var cachedCampaigns = [];
+  var playing = false;
+
+  /** Overlay types that should never appear in the dynamic playlist */
+  var SKIP_OVERLAY_TYPES = { frame: true };
+
+  function assetKey(campaignId, asset, index) {
+    if (asset && asset.id) return asset.id;
+    if (asset && asset.sequence_order != null) return campaignId + ':' + asset.sequence_order;
+    return campaignId + ':legacy:' + (index || 0);
+  }
+
+  function flattenAssets(campaigns) {
+    var out = [];
+    for (var i = 0; i < campaigns.length; i++) {
+      var c = campaigns[i];
+      if (c.assets && c.assets.length > 0) {
+        for (var k = 0; k < c.assets.length; k++) {
+          var a = c.assets[k];
+          // Skip frame assets — they belong in the static OBS source only
+          if (SKIP_OVERLAY_TYPES[(a.overlay_type || '').toLowerCase()]) continue;
+          out.push({
+            key: assetKey(c.id, a, k),
+            campaignId: c.id,
+            sequenceOrder: a.sequence_order || (k + 1),
+            loopMins: typeof a.loop_mins === 'number' ? a.loop_mins : (typeof c.loop_mins === 'number' ? c.loop_mins : 0),
+            campaign: {
+              id: c.id,
+              brand_name: c.brand_name,
+              logo_url: c.logo_url,
+              tagline: c.tagline,
+              promo_code: c.promo_code,
+              overlay_type: a.overlay_type,
+              animation_url: a.asset_url,
+              rive_url: a.overlay_type === 'rive' ? a.asset_url : null,
+              duration_ms: a.duration_ms,
+              loop_mins: a.loop_mins,
+              primary_color: a.primary_color
+            }
+          });
+        }
+      } else {
+        // Legacy single-asset fallback — skip if the only content is a frame_url
+        var legacyType = (c.overlay_type || '').toLowerCase();
+        if (SKIP_OVERLAY_TYPES[legacyType]) continue;
+        var hasPlayableContent = c.animation_url || c.rive_url || c.tagline || c.promo_code;
+        if (!hasPlayableContent) {
+          console.log('[overlay] skipping campaign ' + c.id + ' (no playable content, frame_url only)');
+          continue;
+        }
+        out.push({
+          key: assetKey(c.id, null, 0),
+          campaignId: c.id,
+          sequenceOrder: 1,
+          loopMins: typeof c.loop_mins === 'number' ? c.loop_mins : 0,
+          campaign: c
+        });
+      }
     }
-    var a = queue[index];
-    showCampaign(a.campaign).then(function() {
+    out.sort(function(a, b) {
+      if (a.campaignId < b.campaignId) return -1;
+      if (a.campaignId > b.campaignId) return 1;
+      return a.sequenceOrder - b.sequenceOrder;
+    });
+    return out;
+  }
+
+  function getDueAssets(allAssets) {
+    var now = Date.now();
+    var due = [];
+    for (var i = 0; i < allAssets.length; i++) {
+      var a = allAssets[i];
+      var lm = a.loopMins;
+
+      if (lm <= 0) {
+        if (playedOnce[a.key]) continue;
+      } else {
+        var lp = lastPlayed[a.key];
+        if (lp && (now - lp) < lm * 60 * 1000) continue;
+      }
+      due.push(a);
+    }
+    return due;
+  }
+
+  async function playQueue(queue) {
+    if (queue.length === 0) return;
+    playing = true;
+    console.log('[overlay] playing ' + queue.length + ' due assets');
+    for (var i = 0; i < queue.length; i++) {
+      var a = queue[i];
+      console.log('[overlay] playing asset key=' + a.key + ' (' + a.campaign.brand_name + ' / ' + a.campaign.overlay_type + ')');
+      await showCampaign(a.campaign);
       lastPlayed[a.key] = Date.now();
       if (a.loopMins <= 0) playedOnce[a.key] = true;
-      recordSession(a.campaign);
-      if (index < queue.length - 1) {
-        wait(GAP_MS).then(function() {
-          playQueue(queue, index + 1);
-        });
-      } else {
-        playing = false;
-        console.log('[overlay] queue complete');
+      await recordSession(a.campaign);
+      if (i < queue.length - 1) {
+        await new Promise(function(r) { setTimeout(r, GAP_MS); });
       }
-    });
-  }
-
-  function tick() {
-    if (playing) {
-      setTimeout(tick, TICK_MS);
-      return;
     }
-    poll().then(function() {
-      var due = getDue();
-      if (due.length > 0) {
-        playing = true;
-        playQueue(due, 0);
-      }
-      setTimeout(tick, TICK_MS);
-    });
+    playing = false;
   }
 
-  function start() {
+  var TICK_MS = 30000;
+
+  async function runLoop() {
+    console.log('[overlay] runLoop started, waiting 2s for OBS browser init…');
+
+    // 2s delay to ensure OBS browser source is fully ready
+    await new Promise(function(r) { setTimeout(r, 2000); });
+
+    // Reset state on every page load / OBS refresh
     lastPlayed = {};
     playedOnce = {};
+    cachedCampaigns = [];
     playing = false;
-    cachedAssets = [];
-    console.log('[overlay] starting');
+    console.log('[overlay] state reset, starting fresh cycle');
 
-    poll().then(function() {
-      var due = getDue();
-      if (due.length > 0) {
-        playing = true;
-        playQueue(due, 0);
+    console.log('[overlay] init complete, per-asset scheduler tick=' + TICK_MS + 'ms');
+
+    // First poll with force=true — bypass server-side cooldown on fresh page load
+    cachedCampaigns = await pollWithRetry(3, true);
+    var allAssets = flattenAssets(cachedCampaigns);
+    var initialDue = getDueAssets(allAssets);
+    if (initialDue.length > 0) await playQueue(initialDue);
+
+    // Main loop — normal polling without force (respects cooldown)
+    while (true) {
+      try {
+        await new Promise(function(r) { setTimeout(r, TICK_MS); });
+
+        cachedCampaigns = await poll(false);
+        allAssets = flattenAssets(cachedCampaigns);
+
+        if (playing) continue;
+
+        var due = getDueAssets(allAssets);
+        if (due.length > 0) {
+          await playQueue(due);
+        }
+      } catch (err) {
+        console.error('[overlay] loop error, restarting in 5s:', err);
+        await new Promise(function(r) { setTimeout(r, 5000); });
       }
-      setTimeout(tick, TICK_MS);
-    });
+    }
   }
 
-  setTimeout(start, 2000);
+  runLoop();
 })();
 </script>
 </body>
