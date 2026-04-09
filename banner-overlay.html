@@ -82,7 +82,9 @@
     banner.style.borderTop = '3px solid #' + color.replace(/^#/, '');
   }
 
-  if (logo) {
+  // Only show logo if there is no video/image url
+  // Video assets contain their own branding
+  if (logo && !url) {
     var logoEl = document.createElement('img');
     logoEl.id  = 'banner-logo';
     logoEl.src = decodeURIComponent(logo);
@@ -101,9 +103,9 @@
       vid.loop        = true;
       vid.muted       = false;
       vid.playsInline = true;
-      vid.style.width      = '1920px';
-      vid.style.height     = '160px';
-      vid.style.objectFit  = 'cover';
+      vid.style.width     = '1920px';
+      vid.style.height    = '160px';
+      vid.style.objectFit = 'cover';
       vid.play().catch(function() { vid.muted = true; vid.play(); });
       banner.appendChild(vid);
     } else {
@@ -114,9 +116,9 @@
       banner.appendChild(img);
     }
   } else if (text) {
-    var span           = document.createElement('span');
-    span.id            = 'banner-text';
-    span.textContent   = decodeURIComponent(text);
+    var span         = document.createElement('span');
+    span.id          = 'banner-text';
+    span.textContent = decodeURIComponent(text);
     banner.appendChild(span);
   }
 
