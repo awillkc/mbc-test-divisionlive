@@ -118,7 +118,6 @@
     console.log('[overlay] polling for eligible campaigns, sid=' + streamerId + (force ? ' (force=true)' : ''));
     return fetch(SUPABASE_URL + '/functions/v1/streamer-overlay-data?sid=' + enc(streamerId) + (force ? '&force=true' : '') + '&t=' + Date.now(), {
       cache: 'no-store',
-      headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache, no-store' }
     })
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
