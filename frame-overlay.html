@@ -16,7 +16,6 @@
   <script data-cfasync="false">
     (function () {
       var EDGE_FN_URL = 'https://qwasgcysgppajmdknlor.supabase.co/functions/v1/streamer-overlay-data';
-      var POLL_INTERVAL = 30000;
       var params = new URLSearchParams(window.location.search);
       var sid = params.get('sid');
       if (!sid) { console.warn('[frame-overlay] No sid parameter'); return; }
@@ -25,48 +24,49 @@
       var currentFrameUrl = null;
 
       function fetchFrameUrl() {
-        fetch(EDGE_FN_URL + '?sid=' + encodeURIComponent(sid) + '&t=' + Date.now(), {
-          cache: 'no-store'
-        })
-        .then(function(res) {
-          if (!res.ok) { 
-            console.error('[frame-overlay] Fetch error', res.status); 
-            return null; 
+        console.log('[frame-overlay] fetchFrameUrl called');
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', EDGE_FN_URL + '?sid=' + encodeURIComponent(sid) + '&t=' + Date.now(), true);
+        
+        xhr.onload = function() {
+          console.log('[frame-overlay] xhr onload, status=' + xhr.status);
+          if (xhr.status !== 200) {
+            console.error('[frame-overlay] Bad status:', xhr.status);
+            return;
           }
-          return res.json();
-        })
-        .then(function(campaigns) {
-          if (!campaigns) return;
           
-          var frameUrl = null;
-          for (var i = 0; i < campaigns.length; i++) {
-            if (campaigns[i].frame_url) {
-              frameUrl = campaigns[i].frame_url;
-              break;
+          try {
+            var campaigns = JSON.parse(xhr.responseText);
+            console.log('[frame-overlay] Got ' + campaigns.length + ' campaigns');
+            
+            var frameUrl = null;
+            for (var i = 0; i < campaigns.length; i++) {
+              if (campaigns[i].frame_url) {
+                frameUrl = campaigns[i].frame_url;
+                break;
+              }
             }
+            
+            console.log('[frame-overlay] frameUrl=' + frameUrl);
+            
+            if (frameUrl) {
+              frameEl.src = frameUrl;
+              frameEl.style.display = 'block';
+              console.log('[frame-overlay] Showing frame');
+            }
+          } catch (e) {
+            console.error('[frame-overlay] JSON parse error:', e);
           }
-          
-          if (frameUrl && frameUrl !== currentFrameUrl) {
-            currentFrameUrl = frameUrl;
-            frameEl.src = frameUrl;
-            frameEl.style.display = 'block';
-            console.log('[frame-overlay] Showing frame:', frameUrl);
-          } else if (!frameUrl && currentFrameUrl) {
-            currentFrameUrl = null;
-            frameEl.src = '';
-            frameEl.style.display = 'none';
-            console.log('[frame-overlay] No frame — hiding');
-          }
-        })
-        .catch(function(err) {
-          console.error('[frame-overlay] Poll error:', err);
-        });
+        };
+        
+        xhr.onerror = function() {
+          console.error('[frame-overlay] XHR error');
+        };
+        
+        xhr.send();
       }
 
       console.log('[frame-overlay] Starting, sid=' + sid);
-      setTimeout(fetchFrameUrl, 1000);
-      setInterval(fetchFrameUrl, POLL_INTERVAL);
-    })();
-  </script>
-</body>
-</html>
+      setTimeout(function() {
+        console.log('[frame-overlay] setTimeout fired');
