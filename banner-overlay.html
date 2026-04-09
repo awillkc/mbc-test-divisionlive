@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Banner Overlay</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -39,7 +45,7 @@
   }
   #banner-text {
     color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
       Helvetica, Arial, sans-serif;
     font-size: 48px;
     font-weight: 800;
@@ -48,3 +54,98 @@
     text-shadow: 0 2px 8px rgba(0,0,0,0.4);
   }
 </style>
+</head>
+<body>
+<div id="banner"></div>
+<script data-cfasync="false" type="text/javascript">
+(function() {
+  var params   = new URLSearchParams(window.location.search);
+  var url      = params.get('url');
+  var text     = params.get('text');
+  var logo     = params.get('logo');
+  var duration = parseInt(params.get('duration') || '10000', 10);
+  var loopMins = parseInt(params.get('loop') || '0', 10);
+  var color    = params.get('color');
+  var bgcolor  = params.get('bgcolor') || '000000';
+  var opacity  = parseFloat(params.get('opacity') || '0.85');
+
+  if (!url && !text) return;
+
+  var banner = document.getElementById('banner');
+
+  var r = parseInt(bgcolor.substring(0,2), 16) || 0;
+  var g = parseInt(bgcolor.substring(2,4), 16) || 0;
+  var b = parseInt(bgcolor.substring(4,6), 16) || 0;
+  banner.style.background = 'rgba('+r+','+g+','+b+','+opacity+')';
+
+  if (color) {
+    banner.style.borderTop = '3px solid #' + color.replace(/^#/, '');
+  }
+
+  if (logo) {
+    var logoEl = document.createElement('img');
+    logoEl.id  = 'banner-logo';
+    logoEl.src = decodeURIComponent(logo);
+    logoEl.alt = 'Brand logo';
+    banner.appendChild(logoEl);
+  }
+
+  if (url) {
+    var decodedUrl = decodeURIComponent(url);
+    var isVideo    = /\.(mp4|webm)(\?|$)/i.test(decodedUrl);
+    if (isVideo) {
+      var vid         = document.createElement('video');
+      vid.id          = 'banner-img';
+      vid.src         = decodedUrl;
+      vid.autoplay    = true;
+      vid.loop        = true;
+      vid.muted       = false;
+      vid.playsInline = true;
+      vid.style.width      = '1920px';
+      vid.style.height     = '160px';
+      vid.style.objectFit  = 'cover';
+      vid.play().catch(function() { vid.muted = true; vid.play(); });
+      banner.appendChild(vid);
+    } else {
+      var img = document.createElement('img');
+      img.id  = 'banner-img';
+      img.src = decodeURIComponent(url);
+      img.alt = 'Banner';
+      banner.appendChild(img);
+    }
+  } else if (text) {
+    var span           = document.createElement('span');
+    span.id            = 'banner-text';
+    span.textContent   = decodeURIComponent(text);
+    banner.appendChild(span);
+  }
+
+  function notifyDone() {
+    try { window.parent.postMessage({ type: 'overlay-done' }, '*'); } catch(e) {}
+  }
+
+  function show() {
+    banner.classList.remove('hiding');
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        banner.classList.add('visible');
+      });
+    });
+    if (duration > 0) {
+      setTimeout(function() {
+        banner.classList.remove('visible');
+        banner.classList.add('hiding');
+        setTimeout(notifyDone, 500);
+      }, duration);
+    }
+  }
+
+  show();
+
+  if (loopMins > 0) {
+    setInterval(show, loopMins * 60 * 1000);
+  }
+})();
+</script>
+</body>
+</html>
