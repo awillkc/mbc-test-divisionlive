@@ -87,14 +87,14 @@
       frame.src = url;
       frame.style.display = 'block';
 
-      function done() {
-        clearTimeout(fallbackTimer);
-        window.removeEventListener('message', onMsg);
-        frame.src = 'about:blank';
-        frame.style.display = 'none';
-        console.log('[overlay] finished: ' + c.brand_name);
-        resolve();
-      }
+  function done() {
+  clearTimeout(fallbackTimer);
+  window.removeEventListener('message', onMsg);
+  frame.style.display = 'none';
+  frame.src = 'about:blank';
+  console.log('[overlay] finished: ' + c.brand_name);
+  resolve();
+}
       function onMsg(e) {
         if (e.data && e.data.type === 'overlay-done') done();
       }
