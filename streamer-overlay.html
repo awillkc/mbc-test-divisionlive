@@ -221,15 +221,10 @@
             }
           });
         }
-      } else {
-        // Legacy single-asset fallback — skip if the only content is a frame_url
+} else {
+        // Legacy single-asset fallback
         var legacyType = (c.overlay_type || '').toLowerCase();
         if (SKIP_OVERLAY_TYPES[legacyType]) continue;
-        var hasPlayableContent = c.animation_url || c.rive_url || c.tagline || c.promo_code;
-        if (!hasPlayableContent) {
-          console.log('[overlay] skipping campaign ' + c.id + ' (no playable content, frame_url only)');
-          continue;
-        }
         out.push({
           key: assetKey(c.id, null, 0),
           campaignId: c.id,
